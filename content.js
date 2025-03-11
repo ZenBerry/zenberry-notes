@@ -10,14 +10,14 @@ function getDomain() {
   function loadNoteData() {
     return new Promise((resolve) => {
       chrome.storage.sync.get({ 
-        [`${currentDomain}_note`]: "",
-        [`${currentDomain}_position`]: null,
-        [`${currentDomain}_minimized`]: false
+        [`zenberry_notes_${currentDomain}_note`]: "",
+        [`zenberry_notes_${currentDomain}_position`]: null,
+        [`zenberry_notes_${currentDomain}_minimized`]: false
       }, function(items) {
         resolve({
-          note: items[`${currentDomain}_note`] || "",
-          position: items[`${currentDomain}_position`] || null,
-          minimized: items[`${currentDomain}_minimized`] || true
+          note: items[`zenberry_notes_${currentDomain}_note`] || "",
+          position: items[`zenberry_notes_${currentDomain}_position`] || null,
+          minimized: items[`zenberry_notes_${currentDomain}_minimized`] || true
         });
       });
     });
@@ -25,12 +25,12 @@ function getDomain() {
   
   // Save note to storage
   function saveNote(noteText) {
-    chrome.storage.sync.set({ [`${currentDomain}_note`]: noteText });
+    chrome.storage.sync.set({ [`zenberry_notes_${currentDomain}_note`]: noteText });
   }
   
   // Save position to storage
   function savePosition(left, top) {
-    chrome.storage.sync.set({ [`${currentDomain}_position`]: { left, top } });
+    chrome.storage.sync.set({ [`zenberry_notes_${currentDomain}_position`]: { left, top } });
   }
   
   // Save minimized state
@@ -69,7 +69,7 @@ function getDomain() {
     noteDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.5)'; // 50% opacity by default
     noteDiv.style.transition = "background-color 0.3s, border 0.3s, width 0.3s, height 0.3s, border-radius 0.3s, padding 0.3s";
     noteDiv.style.border = "2px solid rgba(0, 0, 0, 0.3)";
-    noteDiv.style.padding = '10px 20px 10px 10px';
+    noteDiv.style.padding = '10px';
     noteDiv.style.zIndex = '9999';
     // Add user-select: none to prevent text selection while dragging
     noteDiv.style.userSelect = 'none';
@@ -95,7 +95,7 @@ function getDomain() {
     // Create the textarea (only for normal state)
     const noteTextarea = document.createElement('textarea');
     noteTextarea.value = noteData.note;
-    noteTextarea.placeholder = `Notes for ${currentDomain}...`;
+    noteTextarea.placeholder = `Notes for ${currentDomain}`;
     noteTextarea.style.width = "100%";
     noteTextarea.style.height = "100%";
     noteTextarea.style.minHeight = "80px";
@@ -181,8 +181,7 @@ function getDomain() {
       noteDiv.style.minWidth = "200px";
       noteDiv.style.minHeight = "100px";
       noteDiv.style.borderRadius = "15px";
-      noteDiv.style.padding = "10px 20px 10px 10px";
-    //   noteDiv.style.cursor = "default";
+      noteDiv.style.padding = "10px";
       noteDiv.dataset.minimized = "false";
       
       // Add textarea back
