@@ -83,7 +83,7 @@ function getDomain() {
       noteDiv.style.height = "15px";
       noteDiv.style.borderRadius = "50%";
       noteDiv.style.padding = "0";
-      noteDiv.style.cursor = "pointer";
+    //   noteDiv.style.cursor = "pointer";
       noteDiv.dataset.minimized = "true";
     } else {
       // Normal state
@@ -122,44 +122,31 @@ function getDomain() {
       noteDiv.appendChild(noteTextarea);
     }
     
-    // Create button container (for non-minimized state)
+    // Create close button container (for non-minimized state)
     const buttonContainer = document.createElement('div');
     buttonContainer.style.position = "absolute";
     buttonContainer.style.top = "5px";
     buttonContainer.style.right = "5px";
     buttonContainer.style.display = noteData.minimized ? "none" : "block";
     
-    // Create minimize button
-    const minimizeButton = document.createElement("button");
-    minimizeButton.style.color = "#000";
-    minimizeButton.style.border = "none";
-    minimizeButton.style.backgroundColor = "transparent";
-    minimizeButton.style.cursor = "pointer";
-    minimizeButton.style.fontSize = "14px";
-    minimizeButton.style.padding = "0 5px";
-    minimizeButton.style.marginLeft = "5px";
-    minimizeButton.style.lineHeight = "1";
-    minimizeButton.innerHTML = "&#8722;"; // Minus symbol
-    
     // Create close button
     const closeButton = document.createElement("button");
     closeButton.style.color = "#000";
     closeButton.style.border = "none";
     closeButton.style.backgroundColor = "transparent";
-    closeButton.style.cursor = "pointer";
+    // closeButton.style.cursor = "pointer";
     closeButton.style.fontSize = "14px";
     closeButton.style.padding = "0";
     closeButton.style.lineHeight = "1";
     closeButton.innerHTML = "&#10006;"; // Close symbol (X)
     
-    // Add buttons to container
-    buttonContainer.appendChild(minimizeButton);
+    // Add close button to container
     // buttonContainer.appendChild(closeButton);
     
     // Only add button container if not minimized
-    if (!noteData.minimized) {
-      noteDiv.appendChild(buttonContainer);
-    }
+    // if (!noteData.minimized) {
+    //   noteDiv.appendChild(buttonContainer);
+    // }
     
     // Function to minimize the note
     function minimizeNote() {
@@ -179,7 +166,7 @@ function getDomain() {
       noteDiv.style.minHeight = "15px";
       noteDiv.style.borderRadius = "50%";
       noteDiv.style.padding = "0";
-      noteDiv.style.cursor = "pointer";
+    //   noteDiv.style.cursor = "pointer";
       noteDiv.dataset.minimized = "true";
     }
     
@@ -195,7 +182,7 @@ function getDomain() {
       noteDiv.style.minHeight = "100px";
       noteDiv.style.borderRadius = "15px";
       noteDiv.style.padding = "10px 20px 10px 10px";
-      noteDiv.style.cursor = "default";
+    //   noteDiv.style.cursor = "default";
       noteDiv.dataset.minimized = "false";
       
       // Add textarea back
@@ -207,35 +194,39 @@ function getDomain() {
       freshButtonContainer.style.top = "5px";
       freshButtonContainer.style.right = "5px";
       
-      const freshMinimizeButton = document.createElement("button");
-      freshMinimizeButton.style.color = "#000";
-      freshMinimizeButton.style.border = "none";
-      freshMinimizeButton.style.backgroundColor = "transparent";
-      freshMinimizeButton.style.cursor = "pointer";
-      freshMinimizeButton.style.fontSize = "14px";
-      freshMinimizeButton.style.padding = "0 5px";
-      freshMinimizeButton.style.marginLeft = "5px";
-      freshMinimizeButton.style.lineHeight = "1";
-      freshMinimizeButton.innerHTML = "&#8722;"; // Minus symbol
+      const freshCloseButton = document.createElement("button");
+      freshCloseButton.style.color = "#000";
+      freshCloseButton.style.border = "none";
+      freshCloseButton.style.backgroundColor = "transparent";
+    //   freshCloseButton.style.cursor = "pointer";
+      freshCloseButton.style.fontSize = "14px";
+      freshCloseButton.style.padding = "0";
+      freshCloseButton.style.lineHeight = "1";
+      freshCloseButton.innerHTML = "&#10006;"; // Close symbol (X)
       
-      freshMinimizeButton.addEventListener("click", () => {
-        minimizeNote();
+      freshCloseButton.addEventListener("click", () => {
+        document.body.removeChild(noteDiv);
       });
       
-      freshButtonContainer.appendChild(freshMinimizeButton);
-      noteDiv.appendChild(freshButtonContainer);
+    //   freshButtonContainer.appendChild(freshCloseButton);
+    //   noteDiv.appendChild(freshButtonContainer);
     }
     
-    // Toggle minimize/maximize when clicked if minimized
-    noteDiv.addEventListener("click", (event) => {
-      if (noteDiv.dataset.minimized === "true" && event.target === noteDiv) {
-        maximizeNote();
+    // Toggle minimize/maximize on double click
+    noteDiv.addEventListener("dblclick", (event) => {
+      // Prevent double click on textarea and close button
+      if (event.target === noteTextarea || event.target.tagName === 'BUTTON') {
+        return;
       }
-    });
-    
-    // Add event listener to minimize button
-    minimizeButton.addEventListener("click", () => {
-      minimizeNote();
+      
+      if (noteDiv.dataset.minimized === "true") {
+        maximizeNote();
+      } else {
+        minimizeNote();
+      }
+      
+      // Prevent any default behavior like text selection
+      event.preventDefault();
     });
     
     // Add event listener to close button
@@ -258,6 +249,7 @@ function getDomain() {
     let isDragging = false;
     let initialX, initialY;
     let initialLeft, initialTop;
+    let lastClickTime = 0;
     
     // This helps prevent text selection issues during drag
     function preventDefaultDragEvents(e) {
@@ -269,22 +261,32 @@ function getDomain() {
     }
     
     noteDiv.addEventListener("mousedown", (event) => {
-      if (noteDiv.dataset.minimized === "true") {
-        // For minimized state
-        let wasClick = true;
-        
+      // Don't trigger dragging if clicking on textarea or buttons
+      if (event.target === noteTextarea || event.target.tagName === 'BUTTON') {
+        return;
+      }
+      
+      // Store initial positions
+      initialX = event.clientX;
+      initialY = event.clientY;
+      initialLeft = parseInt(noteDiv.style.left) || 0;
+      initialTop = parseInt(noteDiv.style.top) || 0;
+      
+      // Handling for both minimized and normal states
+      if (event.target !== noteTextarea && event.target.tagName !== 'BUTTON') {
         // Store initial positions
         initialX = event.clientX;
         initialY = event.clientY;
         initialLeft = parseInt(noteDiv.style.left) || 0;
         initialTop = parseInt(noteDiv.style.top) || 0;
+        isDragging = true;
         
-        // Add window-level event listener
+        // Apply cursor style
+        // noteDiv.style.cursor = 'grabbing';
+        
+        // Add window-level event listener for smoother dragging
         const onMouseMove = (moveEvent) => {
-          if (Math.abs(moveEvent.clientX - initialX) > 5 || Math.abs(moveEvent.clientY - initialY) > 5) {
-            isDragging = true;
-            wasClick = false;
-            
+          if (isDragging) {
             moveEvent.preventDefault();
             const left = initialLeft + (moveEvent.clientX - initialX);
             const top = initialTop + (moveEvent.clientY - initialY);
@@ -298,54 +300,12 @@ function getDomain() {
           window.removeEventListener('mouseup', onMouseUp);
           
           if (isDragging) {
-            // If we were dragging, save the position
-            savePosition(parseInt(noteDiv.style.left), parseInt(noteDiv.style.top));
-            isDragging = false;
-            
-            // Prevent the click from registering by stopping propagation
-            upEvent.stopPropagation();
-          } else if (wasClick) {
-            // Only maximize if it was a genuine click
-            maximizeNote();
-          }
-        };
-        
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('mouseup', onMouseUp);
-        
-      } else if (event.target !== noteTextarea && event.target.tagName !== 'BUTTON') {
-        // For normal state, only drag when clicking on the container (not controls)
-        event.preventDefault();
-        
-        // Store initial positions
-        initialX = event.clientX;
-        initialY = event.clientY;
-        initialLeft = parseInt(noteDiv.style.left) || 0;
-        initialTop = parseInt(noteDiv.style.top) || 0;
-        isDragging = true;
-        
-        // Apply cursor style
-        noteDiv.style.cursor = 'grabbing';
-        
-        // Add window-level event listener for smoother dragging
-        const onMouseMove = (moveEvent) => {
-          if (isDragging) {
-            moveEvent.preventDefault();
-            const left = initialLeft + (moveEvent.clientX - initialX);
-            const top = initialTop + (moveEvent.clientY - initialY);
-            noteDiv.style.left = `${left}px`;
-            noteDiv.style.top = `${top}px`;
-          }
-        };
-        
-        const onMouseUp = () => {
-          window.removeEventListener('mousemove', onMouseMove);
-          window.removeEventListener('mouseup', onMouseUp);
-          
-          if (isDragging) {
-            // Reset cursor and save position
-            noteDiv.style.cursor = 'default';
-            savePosition(parseInt(noteDiv.style.left), parseInt(noteDiv.style.top));
+            // Only consider it a drag if moved more than 5px
+            if (Math.abs(upEvent.clientX - initialX) > 5 || Math.abs(upEvent.clientY - initialY) > 5) {
+              // Reset cursor and save position
+            //   noteDiv.style.cursor = noteDiv.dataset.minimized === "true" ? 'pointer' : 'default';
+              savePosition(parseInt(noteDiv.style.left), parseInt(noteDiv.style.top));
+            }
             isDragging = false;
           }
         };
