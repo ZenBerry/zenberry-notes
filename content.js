@@ -1,3 +1,8 @@
+const style = document.createElement("style");
+style.textContent = "textarea::placeholder { color: rgba(0, 0, 0, 0.3); }";
+document.head.appendChild(style);
+
+
 // Function to extract domain from current URL
 function getDomain() {
   return window.location.hostname;
@@ -10,14 +15,14 @@ const currentDomain = getDomain();
 function loadNoteData() {
   return new Promise((resolve) => {
       chrome.storage.sync.get({
-          [`zenberry_notes_${currentDomain}_note`]: "",
-          [`zenberry_notes_${currentDomain}_position`]: null,
-          [`zenberry_notes_${currentDomain}_minimized`]: true
+          [`zenberry_notes_v2_${currentDomain}_note`]: "",
+          [`zenberry_notes_v2_${currentDomain}_position`]: null,
+          [`zenberry_notes_v2_${currentDomain}_minimized`]: true
       }, function (items) {
           resolve({
-              note: items[`zenberry_notes_${currentDomain}_note`] || "",
-              position: items[`zenberry_notes_${currentDomain}_position`] || null,
-              minimized: items[`zenberry_notes_${currentDomain}_minimized`] || true
+              note: items[`zenberry_notes_v2_${currentDomain}_note`] || "",
+              position: items[`zenberry_notes_v2_${currentDomain}_position`] || null,
+              minimized: items[`zenberry_notes_v2_${currentDomain}_minimized`] || true
           });
       });
   });
@@ -25,17 +30,17 @@ function loadNoteData() {
 
 // Save note to storage
 function saveNote(noteText) {
-  chrome.storage.sync.set({ [`zenberry_notes_${currentDomain}_note`]: noteText });
+  chrome.storage.sync.set({ [`zenberry_notes_v2_${currentDomain}_note`]: noteText });
 }
 
 // Save position to storage
 function savePosition(left, top) {
-  chrome.storage.sync.set({ [`zenberry_notes_${currentDomain}_position`]: { left, top } });
+  chrome.storage.sync.set({ [`zenberry_notes_v2_${currentDomain}_position`]: { left, top } });
 }
 
 // Save minimized state
 function saveMinimizedState(isMinimized) {
-  chrome.storage.sync.set({ [`zenberry_notes_${currentDomain}_minimized`]: isMinimized });
+  chrome.storage.sync.set({ [`zenberry_notes_v2_${currentDomain}_minimized`]: isMinimized });
 }
 
 // Create and inject the note container
@@ -122,11 +127,11 @@ async function createNoteContainer() {
   
           // Check if the note would go outside the viewport
           if (newLeft + expandedWidth > window.innerWidth) {
-              newLeft = window.innerWidth - expandedWidth - 10; // Keep 10px margin
+              newLeft = window.innerWidth - expandedWidth - 20; // Keep 20px margin
               noteDiv.style.transition = "left 0.3s ease, top 0.3s ease";
           }
           if (newTop + expandedHeight > window.innerHeight) {
-              newTop = window.innerHeight - expandedHeight - 10;
+              newTop = window.innerHeight - expandedHeight - 20;
               noteDiv.style.transition = "left 0.3s ease, top 0.3s ease";
           }
   
