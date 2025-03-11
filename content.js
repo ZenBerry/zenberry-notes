@@ -12,12 +12,12 @@ function loadNoteData() {
       chrome.storage.sync.get({
           [`zenberry_notes_${currentDomain}_note`]: "",
           [`zenberry_notes_${currentDomain}_position`]: null,
-          [`zenberry_notes_${currentDomain}_minimized`]: false
+          [`zenberry_notes_${currentDomain}_minimized`]: true
       }, function (items) {
           resolve({
               note: items[`zenberry_notes_${currentDomain}_note`] || "",
               position: items[`zenberry_notes_${currentDomain}_position`] || null,
-              minimized: items[`zenberry_notes_${currentDomain}_minimized`] || false
+              minimized: items[`zenberry_notes_${currentDomain}_minimized`] || true
           });
       });
   });
@@ -61,7 +61,7 @@ async function createNoteContainer() {
   }
 
   noteDiv.style.borderRadius = '15px';
-  noteDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.5)';
+  noteDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.7)';
   noteDiv.style.transition = "background-color 0.3s, border 0.3s, width 0.3s, height 0.3s, min-width 0.3s, min-height 0.3s, border-radius 0.3s, padding 0.3s, transform 0.3s, opacity 0.3s, pointer-events 0.3s";
   noteDiv.style.border = "2px solid rgba(0, 0, 0, 0.3)";
   noteDiv.style.padding = '10px';
@@ -85,9 +85,24 @@ async function createNoteContainer() {
   noteTextarea.style.fontSize = '14px';
   noteTextarea.style.transition = "all 0.3s ease";
 
+  noteTextarea.setAttribute("data-gramm", "false");
+  noteTextarea.setAttribute("data-gramm_editor", "false");
+  noteTextarea.setAttribute("data-enable-grammarly", "false");
+
   noteTextarea.addEventListener('input', () => saveNote(noteTextarea.value));
 
   noteDiv.appendChild(noteTextarea);
+
+  // Handle hover effects for background opacity
+  noteDiv.addEventListener("mouseenter", () => {
+    noteDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.9)'; // 100% opacity on hover
+    noteDiv.style.border = "2px solid rgba(0, 0, 0, 0.9)";
+  });
+  
+  noteDiv.addEventListener("mouseleave", () => {
+    noteDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.5)'; // Back to 70% opacity
+    noteDiv.style.border = "2px solid rgba(0, 0, 0, 0.5)";
+  });
 
   // Set initial state
   function applyMinimizedState(minimized) {
