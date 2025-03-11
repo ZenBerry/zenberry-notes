@@ -1,7 +1,7 @@
 # About
 
 Add a note to any website ^_^ 
-See a yellow dot in the bottom in the corner. 
+See a yellow dot in the bottom left corner. 
 Double-click to maximise it and start typing. 
 You can also drag it around and minimise it by double-clicking it again.
 
