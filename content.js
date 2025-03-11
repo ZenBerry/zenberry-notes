@@ -62,7 +62,7 @@ async function createNoteContainer() {
 
   noteDiv.style.borderRadius = '15px';
   noteDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.7)';
-  noteDiv.style.transition = "background-color 0.3s, border 0.3s, width 0.3s, height 0.3s, min-width 0.3s, min-height 0.3s, border-radius 0.3s, padding 0.3s, transform 0.3s, opacity 0.3s, pointer-events 0.3s";
+  noteDiv.style.transition = "background-color 0.3s, border 0.3s, width 0.3s, height 0.3s, min-width 0.3s, min-height 0.3s, border-radius 0.3s, padding 0.3s, transform 0.3s, opacity 0.3s, pointer-events 0.3s ease-in-out";
   noteDiv.style.border = "2px solid rgba(0, 0, 0, 0.3)";
   noteDiv.style.padding = '10px';
   noteDiv.style.zIndex = '9999';
@@ -123,10 +123,15 @@ async function createNoteContainer() {
           // Check if the note would go outside the viewport
           if (newLeft + expandedWidth > window.innerWidth) {
               newLeft = window.innerWidth - expandedWidth - 10; // Keep 10px margin
+              noteDiv.style.transition = "left 0.3s ease, top 0.3s ease";
           }
           if (newTop + expandedHeight > window.innerHeight) {
               newTop = window.innerHeight - expandedHeight - 10;
+              noteDiv.style.transition = "left 0.3s ease, top 0.3s ease";
           }
+  
+          // Apply smooth transition for movement
+
   
           noteDiv.style.left = `${newLeft}px`;
           noteDiv.style.top = `${newTop}px`;
@@ -139,8 +144,14 @@ async function createNoteContainer() {
           noteTextarea.style.transform = "scale(1)";
           noteTextarea.style.opacity = "1";
           noteTextarea.style.pointerEvents = "auto";
+  
+          // Remove transition after movement completes
+          setTimeout(() => {
+              noteDiv.style.transition = "background-color 0.3s, border 0.3s, width 0.3s, height 0.3s, min-width 0.3s, min-height 0.3s, border-radius 0.3s, padding 0.3s, transform 0.3s, opacity 0.3s, pointer-events 0.3s";
+          }, 300);
       }
   }
+  
 
   applyMinimizedState(noteData.minimized);
 
