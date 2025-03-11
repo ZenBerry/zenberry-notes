@@ -115,8 +115,25 @@ async function createNoteContainer() {
           noteTextarea.style.opacity = "0";
           noteTextarea.style.pointerEvents = "none";
       } else {
-          noteDiv.style.width = "200px";
-          noteDiv.style.height = "100px";
+          const expandedWidth = 200;
+          const expandedHeight = 100;
+          let newLeft = parseInt(noteDiv.style.left);
+          let newTop = parseInt(noteDiv.style.top);
+  
+          // Check if the note would go outside the viewport
+          if (newLeft + expandedWidth > window.innerWidth) {
+              newLeft = window.innerWidth - expandedWidth - 10; // Keep 10px margin
+          }
+          if (newTop + expandedHeight > window.innerHeight) {
+              newTop = window.innerHeight - expandedHeight - 10;
+          }
+  
+          noteDiv.style.left = `${newLeft}px`;
+          noteDiv.style.top = `${newTop}px`;
+          savePosition(newLeft, newTop);
+  
+          noteDiv.style.width = `${expandedWidth}px`;
+          noteDiv.style.height = `${expandedHeight}px`;
           noteDiv.style.borderRadius = "15px";
           noteDiv.style.padding = "10px";
           noteTextarea.style.transform = "scale(1)";
