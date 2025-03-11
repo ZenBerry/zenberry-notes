@@ -125,18 +125,28 @@ async function createNoteContainer() {
           let newLeft = parseInt(noteDiv.style.left);
           let newTop = parseInt(noteDiv.style.top);
   
+          // Get viewport size
+          const viewportWidth = document.documentElement.clientWidth;
+          const viewportHeight = document.documentElement.clientHeight;
+
+          console.log(viewportHeight, viewportWidth);
+  
+          let needsTransition = false;
+  
           // Check if the note would go outside the viewport
-          if (newLeft + expandedWidth > window.innerWidth) {
-              newLeft = window.innerWidth - expandedWidth - 20; // Keep 20px margin
-              noteDiv.style.transition = "left 0.3s ease, top 0.3s ease";
+          if (newLeft + expandedWidth > viewportWidth) {
+              newLeft = viewportWidth - expandedWidth - 40; // Keep 40px margin
+              needsTransition = true;
           }
-          if (newTop + expandedHeight > window.innerHeight) {
-              newTop = window.innerHeight - expandedHeight - 20;
-              noteDiv.style.transition = "left 0.3s ease, top 0.3s ease";
+          if (newTop + expandedHeight > viewportHeight) {
+              newTop = viewportHeight - expandedHeight - 40;
+              needsTransition = true;
           }
   
-          // Apply smooth transition for movement
-
+          // Apply smooth transition if movement is needed
+          if (needsTransition) {
+              noteDiv.style.transition = "left 0.3s ease, top 0.3s ease";
+          }
   
           noteDiv.style.left = `${newLeft}px`;
           noteDiv.style.top = `${newTop}px`;
@@ -156,6 +166,7 @@ async function createNoteContainer() {
           }, 300);
       }
   }
+  
   
 
   applyMinimizedState(noteData.minimized);
