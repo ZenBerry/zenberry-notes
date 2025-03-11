@@ -63,6 +63,10 @@ function getDomain() {
     noteDiv.style.border = "2px solid rgba(0, 0, 0, 0.7)";
     noteDiv.style.padding = '10px';
     noteDiv.style.zIndex = '9999';
+    // Add user-select: none to prevent text selection while dragging
+    noteDiv.style.userSelect = 'none';
+    noteDiv.style.webkitUserSelect = 'none';
+    noteDiv.style.msUserSelect = 'none';
     
     // Set initial state (minimized or normal)
     if (noteData.minimized) {
@@ -94,6 +98,10 @@ function getDomain() {
     noteTextarea.style.color = "#000";
     noteTextarea.style.fontFamily = 'Arial, sans-serif';
     noteTextarea.style.fontSize = '14px';
+    // Allow selection in the textarea
+    noteTextarea.style.userSelect = 'text';
+    noteTextarea.style.webkitUserSelect = 'text';
+    noteTextarea.style.msUserSelect = 'text';
     
     // Save changes when text is edited
     noteTextarea.addEventListener('input', () => {
@@ -214,52 +222,118 @@ function getDomain() {
       noteDiv.style.border = "2px solid rgba(0, 0, 0, 0.7)";
     });
     
-    // Make the div draggable
+    // Improved dragging functionality
     let isDragging = false;
-    let offset = { x: 0, y: 0 };
+    let initialX, initialY;
+    let initialLeft, initialTop;
+    
+    // This helps prevent text selection issues during drag
+    function preventDefaultDragEvents(e) {
+      if (isDragging) {
+        e.preventDefault();
+        return false;
+      }
+      return true;
+    }
     
     noteDiv.addEventListener("mousedown", (event) => {
-      // Don't start dragging if we're clicking on interactive elements
       if (noteDiv.dataset.minimized === "true") {
-        // For minimized state, allow dragging with simple click
-        // but also trigger the click event when released
-        isDragging = false;
-        offset = {
-          x: event.clientX - noteDiv.offsetLeft,
-          y: event.clientY - noteDiv.offsetTop,
-        };
+        // For minimized state
+        let dragStarted = false;
+        
+        // Store initial positions
+        initialX = event.clientX;
+        initialY = event.clientY;
+        initialLeft = parseInt(noteDiv.style.left) || 0;
+        initialTop = parseInt(noteDiv.style.top) || 0;
         
         // Small timeout to see if it's a drag or click
-        setTimeout(() => {
-          isDragging = true;
+        const clickTimer = setTimeout(() => {
+          if (Math.abs(event.clientX - initialX) > 5 || Math.abs(event.clientY - initialY) > 5) {
+            isDragging = true;
+            dragStarted = true;
+          }
         }, 100);
         
-      } else if (event.target.tagName !== 'TEXTAREA' && event.target.tagName !== 'BUTTON') {
-        // For normal state, only drag when clicking on the container (not controls)
-        isDragging = true;
-        offset = {
-          x: event.clientX - noteDiv.offsetLeft,
-          y: event.clientY - noteDiv.offsetTop,
+        // Add window-level event listener
+        const onMouseMove = (moveEvent) => {
+          if (!dragStarted && (Math.abs(moveEvent.clientX - initialX) > 5 || Math.abs(moveEvent.clientY - initialY) > 5)) {
+            isDragging = true;
+            dragStarted = true;
+            clearTimeout(clickTimer);
+          }
+          
+          if (isDragging) {
+            moveEvent.preventDefault();
+            const left = initialLeft + (moveEvent.clientX - initialX);
+            const top = initialTop + (moveEvent.clientY - initialY);
+            noteDiv.style.left = `${left}px`;
+            noteDiv.style.top = `${top}px`;
+          }
         };
+        
+        const onMouseUp = () => {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+          
+          if (isDragging) {
+            // If we were dragging, save the position
+            savePosition(parseInt(noteDiv.style.left), parseInt(noteDiv.style.top));
+            isDragging = false;
+          } else {
+            // If we weren't dragging, it was a click - maximize
+            clearTimeout(clickTimer);
+            maximizeNote();
+          }
+        };
+        
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+        
+      } else if (event.target !== noteTextarea && event.target.tagName !== 'BUTTON') {
+        // For normal state, only drag when clicking on the container (not controls)
+        event.preventDefault();
+        
+        // Store initial positions
+        initialX = event.clientX;
+        initialY = event.clientY;
+        initialLeft = parseInt(noteDiv.style.left) || 0;
+        initialTop = parseInt(noteDiv.style.top) || 0;
+        isDragging = true;
+        
+        // Apply cursor style
+        noteDiv.style.cursor = 'grabbing';
+        
+        // Add window-level event listener for smoother dragging
+        const onMouseMove = (moveEvent) => {
+          if (isDragging) {
+            moveEvent.preventDefault();
+            const left = initialLeft + (moveEvent.clientX - initialX);
+            const top = initialTop + (moveEvent.clientY - initialY);
+            noteDiv.style.left = `${left}px`;
+            noteDiv.style.top = `${top}px`;
+          }
+        };
+        
+        const onMouseUp = () => {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+          
+          if (isDragging) {
+            // Reset cursor and save position
+            noteDiv.style.cursor = 'default';
+            savePosition(parseInt(noteDiv.style.left), parseInt(noteDiv.style.top));
+            isDragging = false;
+          }
+        };
+        
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
       }
     });
     
-    noteDiv.addEventListener("mouseup", (event) => {
-      // Save position after dragging ends
-      if (isDragging) {
-        savePosition(parseInt(noteDiv.style.left), parseInt(noteDiv.style.top));
-      }
-      isDragging = false;
-    });
-    
-    noteDiv.addEventListener("mousemove", (event) => {
-      if (isDragging) {
-        const left = event.clientX - offset.x;
-        const top = event.clientY - offset.y;
-        noteDiv.style.left = `${left}px`;
-        noteDiv.style.top = `${top}px`;
-      }
-    });
+    // Prevent default selection behavior anywhere in the document during drag
+    document.addEventListener('selectstart', preventDefaultDragEvents);
     
     // Append note container to body
     document.body.appendChild(noteDiv);
