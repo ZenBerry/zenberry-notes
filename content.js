@@ -58,8 +58,8 @@ function getDomain() {
     }
     
     noteDiv.style.borderRadius = '15px';
-    noteDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.7)'; // 70% opacity by default
-    noteDiv.style.transition = "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"; // ease-in-out for all properties
+    noteDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.5)'; // 70% opacity by default
+    noteDiv.style.transition = "background-color 0.3s, border 0.3s, width 0.3s, height 0.3s, border-radius 0.3s, padding 0.3s";
     noteDiv.style.border = "2px solid rgba(0, 0, 0, 0.7)";
     noteDiv.style.padding = '10px';
     noteDiv.style.zIndex = '9999';
