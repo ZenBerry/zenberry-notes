@@ -17,7 +17,7 @@ function getDomain() {
         resolve({
           note: items[`${currentDomain}_note`] || "",
           position: items[`${currentDomain}_position`] || null,
-          minimized: items[`${currentDomain}_minimized`] || false
+          minimized: items[`${currentDomain}_minimized`] || true
         });
       });
     });
@@ -48,20 +48,28 @@ function getDomain() {
     noteDiv.setAttribute('id', 'domain-note-container');
     noteDiv.style.position = 'fixed';
     
-    // Set position from saved data or random position
+    // Set position from saved data or default to left bottom corner
     if (noteData.position) {
       noteDiv.style.left = `${noteData.position.left}px`;
       noteDiv.style.top = `${noteData.position.top}px`;
     } else {
-      noteDiv.style.top = Math.floor(Math.random() * (window.innerHeight-150)) + 'px';
-      noteDiv.style.left = Math.floor(Math.random() * (window.innerWidth-250)) + 'px';
+      // Initial position in pixels (not using bottom property)
+      const initialLeft = 20;
+      const initialTop = window.innerHeight - 40; // 20px from bottom
+      noteDiv.style.left = `${initialLeft}px`;
+      noteDiv.style.top = `${initialTop}px`;
+      
+      // Store this initial position
+      setTimeout(() => {
+        savePosition(initialLeft, initialTop);
+      }, 100);
     }
     
     noteDiv.style.borderRadius = '15px';
-    noteDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.5)'; // 70% opacity by default
+    noteDiv.style.backgroundColor = 'rgba(255, 204, 0, 0.5)'; // 50% opacity by default
     noteDiv.style.transition = "background-color 0.3s, border 0.3s, width 0.3s, height 0.3s, border-radius 0.3s, padding 0.3s";
-    noteDiv.style.border = "2px solid rgba(0, 0, 0, 0.7)";
-    noteDiv.style.padding = '10px';
+    noteDiv.style.border = "2px solid rgba(0, 0, 0, 0.3)";
+    noteDiv.style.padding = '10px 20px 10px 10px';
     noteDiv.style.zIndex = '9999';
     // Add user-select: none to prevent text selection while dragging
     noteDiv.style.userSelect = 'none';
@@ -94,8 +102,9 @@ function getDomain() {
     noteTextarea.style.backgroundColor = "transparent";
     noteTextarea.style.border = "none";
     noteTextarea.style.outline = "none";
-    noteTextarea.style.resize = "both";
+    noteTextarea.style.resize = "none";
     noteTextarea.style.color = "#000";
+    noteTextarea.style.boxShadow = "none";
     noteTextarea.style.fontFamily = 'Arial, sans-serif';
     noteTextarea.style.fontSize = '14px';
     // Allow selection in the textarea
@@ -128,7 +137,7 @@ function getDomain() {
     minimizeButton.style.cursor = "pointer";
     minimizeButton.style.fontSize = "14px";
     minimizeButton.style.padding = "0 5px";
-    minimizeButton.style.marginRight = "5px";
+    minimizeButton.style.marginLeft = "5px";
     minimizeButton.style.lineHeight = "1";
     minimizeButton.innerHTML = "&#8722;"; // Minus symbol
     
@@ -145,7 +154,7 @@ function getDomain() {
     
     // Add buttons to container
     buttonContainer.appendChild(minimizeButton);
-    buttonContainer.appendChild(closeButton);
+    // buttonContainer.appendChild(closeButton);
     
     // Only add button container if not minimized
     if (!noteData.minimized) {
@@ -185,13 +194,36 @@ function getDomain() {
       noteDiv.style.minWidth = "200px";
       noteDiv.style.minHeight = "100px";
       noteDiv.style.borderRadius = "15px";
-      noteDiv.style.padding = "10px";
+      noteDiv.style.padding = "10px 20px 10px 10px";
       noteDiv.style.cursor = "default";
       noteDiv.dataset.minimized = "false";
       
       // Add textarea back
       noteDiv.appendChild(noteTextarea);
-      noteDiv.appendChild(buttonContainer);
+      
+      // Create fresh buttonContainer and buttons
+      const freshButtonContainer = document.createElement('div');
+      freshButtonContainer.style.position = "absolute";
+      freshButtonContainer.style.top = "5px";
+      freshButtonContainer.style.right = "5px";
+      
+      const freshMinimizeButton = document.createElement("button");
+      freshMinimizeButton.style.color = "#000";
+      freshMinimizeButton.style.border = "none";
+      freshMinimizeButton.style.backgroundColor = "transparent";
+      freshMinimizeButton.style.cursor = "pointer";
+      freshMinimizeButton.style.fontSize = "14px";
+      freshMinimizeButton.style.padding = "0 5px";
+      freshMinimizeButton.style.marginLeft = "5px";
+      freshMinimizeButton.style.lineHeight = "1";
+      freshMinimizeButton.innerHTML = "&#8722;"; // Minus symbol
+      
+      freshMinimizeButton.addEventListener("click", () => {
+        minimizeNote();
+      });
+      
+      freshButtonContainer.appendChild(freshMinimizeButton);
+      noteDiv.appendChild(freshButtonContainer);
     }
     
     // Toggle minimize/maximize when clicked if minimized
@@ -239,7 +271,7 @@ function getDomain() {
     noteDiv.addEventListener("mousedown", (event) => {
       if (noteDiv.dataset.minimized === "true") {
         // For minimized state
-        let dragStarted = false;
+        let wasClick = true;
         
         // Store initial positions
         initialX = event.clientX;
@@ -247,23 +279,12 @@ function getDomain() {
         initialLeft = parseInt(noteDiv.style.left) || 0;
         initialTop = parseInt(noteDiv.style.top) || 0;
         
-        // Small timeout to see if it's a drag or click
-        const clickTimer = setTimeout(() => {
-          if (Math.abs(event.clientX - initialX) > 5 || Math.abs(event.clientY - initialY) > 5) {
-            isDragging = true;
-            dragStarted = true;
-          }
-        }, 100);
-        
         // Add window-level event listener
         const onMouseMove = (moveEvent) => {
-          if (!dragStarted && (Math.abs(moveEvent.clientX - initialX) > 5 || Math.abs(moveEvent.clientY - initialY) > 5)) {
+          if (Math.abs(moveEvent.clientX - initialX) > 5 || Math.abs(moveEvent.clientY - initialY) > 5) {
             isDragging = true;
-            dragStarted = true;
-            clearTimeout(clickTimer);
-          }
-          
-          if (isDragging) {
+            wasClick = false;
+            
             moveEvent.preventDefault();
             const left = initialLeft + (moveEvent.clientX - initialX);
             const top = initialTop + (moveEvent.clientY - initialY);
@@ -272,7 +293,7 @@ function getDomain() {
           }
         };
         
-        const onMouseUp = () => {
+        const onMouseUp = (upEvent) => {
           window.removeEventListener('mousemove', onMouseMove);
           window.removeEventListener('mouseup', onMouseUp);
           
@@ -280,9 +301,11 @@ function getDomain() {
             // If we were dragging, save the position
             savePosition(parseInt(noteDiv.style.left), parseInt(noteDiv.style.top));
             isDragging = false;
-          } else {
-            // If we weren't dragging, it was a click - maximize
-            clearTimeout(clickTimer);
+            
+            // Prevent the click from registering by stopping propagation
+            upEvent.stopPropagation();
+          } else if (wasClick) {
+            // Only maximize if it was a genuine click
             maximizeNote();
           }
         };
